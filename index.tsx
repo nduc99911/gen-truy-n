@@ -83,6 +83,7 @@ interface ComicPanel {
 
 const PRESET_SIDE_CHARACTERS = [
   { name: "Doraemon", description: "Mèo máy màu xanh, tròn ủng, đeo chuông vàng, túi thần kỳ." },
+  { name: "Nobita", description: "Cậu bé đeo kính tròn, mặc áo thun vàng, quần soóc xanh, hậu đậu." },
   { name: "Mẹ", description: "Phụ nữ đeo kính tròn, mặc tạp dề, tóc uốn, nghiêm khắc." },
   { name: "Bố", description: "Người đàn ông mặc vest, đi làm về, hút thuốc, hiền lành." },
   { name: "Chaien", description: "To béo, áo cam sọc đen, dữ dằn, hay hát." },
@@ -448,6 +449,7 @@ const App = () => {
   // Story Settings
   const [storyLength, setStoryLength] = useState<4 | 8>(4);
   const [panelsPerPage, setPanelsPerPage] = useState<2 | 3 | 4>(4);
+  const [comicBackgroundColor, setComicBackgroundColor] = useState('#ffffff');
   
   // Character Config
   const [character, setCharacter] = useState<CharacterConfig>({
@@ -472,11 +474,14 @@ const App = () => {
   const [script, setScript] = useState<ComicPanel[]>([]);
 
   // Editor State
-  const [activeEditorTab, setActiveEditorTab] = useState<'gadgets' | 'effects' | 'upload'>('gadgets');
+  const [activeEditorTab, setActiveEditorTab] = useState<'gadgets' | 'effects' | 'upload' | 'style'>('gadgets');
 
   // Suggestion logic
   const matchingPreset = PRESET_SIDE_CHARACTERS.find(
-    p => newSideCharName && p.name.toLowerCase().includes(newSideCharName.toLowerCase())
+    p => newSideCharName && (
+      p.name.toLowerCase().includes(newSideCharName.trim().toLowerCase()) || 
+      newSideCharName.trim().toLowerCase().includes(p.name.toLowerCase())
+    )
   );
 
   // --- API Handlers ---
@@ -1316,7 +1321,10 @@ const App = () => {
 
           <div id="comic-strip">
              {/* Title Page / Header */}
-            <div className="bg-white p-8 rounded-sm shadow-2xl mb-8 border-2 border-gray-100 print:border-0 print:shadow-none print:mb-4">
+            <div 
+              className="p-8 rounded-sm shadow-2xl mb-8 border-2 border-gray-100 print:border-0 print:shadow-none print:mb-4"
+              style={{ backgroundColor: comicBackgroundColor }}
+            >
                <h1 className="text-5xl font-black text-center mb-4 uppercase tracking-tight text-[#0096e7] comic-font print:text-black">
                 {storyTopic.length > 40 ? storyTopic.slice(0, 40) + '...' : storyTopic}
                </h1>
@@ -1327,11 +1335,14 @@ const App = () => {
               <div 
                 key={pageIdx} 
                 className={`
-                  bg-white p-8 rounded-sm shadow-2xl border-2 border-gray-100 mb-8 
+                  p-8 rounded-sm shadow-2xl border-2 border-gray-100 mb-8 
                   print:shadow-none print:border-0 print:p-0 print:m-0 print:w-full print:mb-0
                   relative
                 `}
-                style={{ breakAfter: pageIdx < pages.length - 1 ? 'page' : 'auto' }}
+                style={{ 
+                  breakAfter: pageIdx < pages.length - 1 ? 'page' : 'auto',
+                  backgroundColor: comicBackgroundColor
+                }}
               >
                  <div className="grid grid-cols-1 gap-12 print:gap-8">
                     {pagePanels.map(({ panel, globalIndex }) => (
@@ -1382,6 +1393,12 @@ const App = () => {
                 className={`flex-1 py-3 text-sm font-bold ${activeEditorTab === 'upload' ? 'text-[#0096e7] border-b-2 border-[#0096e7]' : 'text-gray-500'}`}
               >
                 Tải ảnh
+              </button>
+              <button 
+                onClick={() => setActiveEditorTab('style')}
+                className={`flex-1 py-3 text-sm font-bold ${activeEditorTab === 'style' ? 'text-[#0096e7] border-b-2 border-[#0096e7]' : 'text-gray-500'}`}
+              >
+                Màu nền
               </button>
             </div>
 
@@ -1435,6 +1452,17 @@ const App = () => {
                           <li>Click đúp để xóa.</li>
                         </ul>
                     </div>
+                  </div>
+              )}
+
+              {activeEditorTab === 'style' && (
+                  <div className="text-center space-y-4">
+                     <p className="text-sm text-gray-500 mb-4">Thay đổi màu nền cho trang truyện tranh của bạn.</p>
+                     <ColorPicker 
+                        label="Màu nền truyện" 
+                        color={comicBackgroundColor} 
+                        onChange={setComicBackgroundColor} 
+                     />
                   </div>
               )}
             </div>
